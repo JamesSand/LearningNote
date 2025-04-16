@@ -1,5 +1,22 @@
-
 ## LLM Red Teaming
+
+[THU CoAI SafetyLab](https://github.com/thu-coai/AISafetyLab) 这里有一些攻击算法的实现
+
+### Survey
+
+[Breaking Down the Defence](https://arxiv.org/pdf/2403.04786)
+
+[Against The Achilles’ Heel](https://arxiv.org/pdf/2404.00629) Linzhi Liu (LibrAI THU)
+
+[Survey of Vulnerabilities in Large Language Models Revealed by Adversarial Attacks](https://arxiv.org/pdf/2310.10844) 这个感觉比较好，但是我还没来得及看
+
+### Some Interesting paper
+
+用催眠的方式来 jailbreak LLM [paper link](https://arxiv.org/pdf/2311.03191)
+
+
+
+
 
 ### Greedy Coordinate Gradient (GCG)
 
@@ -49,6 +66,14 @@
 
 <img src="LLM_red_teaming/image-20250414160154957.png" alt="image-20250414160154957" style="zoom:50%;" />
 
+### ExploitingtheIndexGradientsforOptimization-BasedJailbreakingon LargeLanguageModels
+
+[paper link](https://arxiv.org/pdf/2412.08615)
+
+
+
+
+
 
 
 ### Introduction
@@ -74,6 +99,65 @@ white box 里边比较常见的是 greedy coordinate descent 和 AutoDAN (TODO: 
 2. 在模型生命周期的哪个阶段 red team: model testing; pre-deployment; CI/CD; post-depolyment
 3. 能用来 red team 的 resource 有多少。这里可以做 resource constraint 的 red team
 4. 
+
+
+
+
+
+## LLM Automatic Prompt Optimization
+
+### ProTeGi(EMNLP 2023)
+
+[paper link](https://arxiv.org/pdf/2305.03495)
+
+这个 paper 非常好玩，他把 prompt optimization 问题转化成了一个多臂老虎机的问题。
+
+<img src="LLM_red_teaming/image-20250416194928571.png" alt="image-20250416194928571" style="zoom:50%;" />
+
+每轮迭代中，会首先 back propagate 每个 prompt 的 gradient。根据这个 gradient 搞出新的 prompt p' 然后在 p' 的基础上用 LLM paraphrase 的方法搞出 p'' 最后再用 bandit selection 的方法选出最优的 prompt，如此迭代直到足够准确
+
+Text expand 那一步主要是基于 black box LLM 的。本质上是他们将模型的错误输入给另一个 LLM，然后让这个 LLM 想可能的解决方案。所以是可以基于 API call 的黑盒的
+
+这里主要讲了 bandit selection，有很多方法：UCB(upper confidence bound) Bandit, successive reject, successive halving 
+
+
+
+### Amazon Survey
+
+[paper link](https://arxiv.org/pdf/2502.16923) 
+
+Aumatic Prompt Optimization (APO) 被定义为一个优化问题
+
+<img src="LLM_red_teaming/image-20250414234821310.png" alt="image-20250414234821310" style="zoom:50%;" />
+
+这里他们定义了一个 general 的 prompt optimization 的算法框架
+
+<img src="LLM_red_teaming/image-20250416192348066.png" alt="image-20250416192348066" style="zoom:50%;" />
+
+APO 的优化流程可以被可视化成下边这个样子
+
+<img src="LLM_red_teaming/image-20250416192850095.png" alt="image-20250416192850095" style="zoom:50%;" />
+
+第一步是枚举一些 candidate prompt，然后基于 candidate prompt 产生类似于 tree search 的结构，再通过 evaluation 的方式选取哪些 prompt 可以被留下
+
+> 这里边几个可以做的点在于 
+>
+> 1 优化 candidate prompt generation （这个应该被很多人做过了）
+>
+> 2 优化 inference evaluation 和 feedback 的过程（这个应该很 task dependent ）
+>
+> 3 这个流程像一个  DFS 或者 BFS 的过程，可以看看有什么别的搜索算法可以简单拓展到这个上边
+
+#### Seed LLM prompt
+
+除了人工手动构造之外，还可以用 LLM 帮助我们生成，具体的办法还没细看
+
+#### Inference Evaluation
+
+这里除了显而易见的 Accuracy，Reward model score，还有值得注意的 Entropy based score （但是不能用于 black box LLM）Negative log likelihood 
+
+
+
 
 
 
@@ -108,12 +192,4 @@ LLM system 里边除了 LLM 之外还有一些 Non-LLM 的东西，比如说 ret
 [OPRO Optimization by prompting](https://arxiv.org/pdf/2309.03409)
 
 
-
-## LLM Automatic Prompt Optimization
-
-### Amazon Survey
-
-[paper link](https://arxiv.org/pdf/2502.16923) 
-
-TODO: read this survey
 
