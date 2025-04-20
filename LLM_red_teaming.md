@@ -66,9 +66,64 @@
 
 <img src="LLM_red_teaming/image-20250414160154957.png" alt="image-20250414160154957" style="zoom:50%;" />
 
-### ExploitingtheIndexGradientsforOptimization-BasedJailbreakingon LargeLanguageModels
+### MAGIC
+
+ExploitingtheIndexGradientsforOptimization-BasedJailbreakingon LargeLanguageModels
 
 [paper link](https://arxiv.org/pdf/2412.08615)
+
+
+
+### Other GCG
+
+[Ample GCG](https://arxiv.org/pdf/2404.07921) [2404, COLM 2024, Zeyi Liao, Huan Sun, OSU]
+
+把原本的 GCG 保留 best suffix 的模式改成保留更多的 suffix，他们管这个叫做 overgenerate，然后通过 overgenerate prompt 是否能真正 jailbreak filter 掉失败的部分。然后用这一部分 train 一个 suffix generation model，后续以更快的速度 generation attack suffix
+
+<img src="LLM_red_teaming/image-20250417154349655.png" alt="image-20250417154349655" style="zoom:50%;" />
+
+[AttnGCG](https://arxiv.org/pdf/2410.09040) [2410, TMLR, Zijun Wang, Cihang Xie, UCSC]
+
+通过修改被攻击的 LLM 的 attention focus，让被攻击的 LLM 更容易 jailbreak
+
+<img src="LLM_red_teaming/image-20250417154918020.png" alt="image-20250417154918020" style="zoom:50%;" />
+
+这里是他们的曲线图，非常清楚，值得学习一下
+
+<img src="LLM_red_teaming/image-20250417155120593.png" alt="image-20250417155120593" style="zoom:50%;" />
+
+
+[Faster GCG](https://arxiv.org/pdf/2410.15362) [2410, Xiao Li, Xiaolin Hu THU]
+
+不愧是 Xiaolin 的 work，确实 solid。
+
+<img src="LLM_red_teaming/image-20250420132711339.png" alt="image-20250420132711339" style="zoom:50%;" />
+
+在原始的 GCG 的基础上提出了三点改进
+
+1. 在原本的 loss term 上增加了一个 distance regularization term
+2. 从 random sampling 变成了 greedy sampling
+3. 增加了一个 heuristic record
+
+后边两个是比较 trivial 的改进。第一个改进有点意思
+
+<img src="LLM_red_teaming/image-20250420132841779.png" alt="image-20250420132841779" style="zoom:50%;" />
+
+他们在这里发现原本 GCG loss 的 minimize 的目标是找一个和当前 X_j 最接近的 X_k 但是 LLM 训出来的 word embedding 基本上是 span 整个 space 的。所以这个 objective 不够精准。因此他们在 loss term 上增加了一个 regularization distance term 来解决这个问题
+
+<img src="LLM_red_teaming/image-20250420133024632.png" alt="image-20250420133024632" style="zoom:50%;" />
+
+关于 GCG 本身是怎么 work 的，这个 paper 里边也阐述的很清楚。
+
+首先 adv suffix x 可以被写成一个 vobac matrix V 乘以一个 binary matrix E
+
+<img src="LLM_red_teaming/image-20250420133456097.png" alt="image-20250420133456097" style="zoom:50%;" />
+
+然后求导的时候，只需要对 E 求导，就可以找到 TopK 个 promising 的 token 了
+
+<img src="LLM_red_teaming/image-20250420133537052.png" alt="image-20250420133537052" style="zoom:50%;" />
+
+
 
 
 
@@ -193,3 +248,12 @@ LLM system 里边除了 LLM 之外还有一些 Non-LLM 的东西，比如说 ret
 
 
 
+## Idea
+
+backpropagate to first layer embed
+
+让后边更费时间的 BP 少更新，让第一层不费时间的 BP 多更新
+
+暴力搜索上加上 beam search
+
+https://arxiv.org/abs/2206.09914 
